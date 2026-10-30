@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ConsultaOK no WhatsApp — protótipo</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff; --soft: #f4f6f9; --ink: #1c2530; --muted: #566271; --faint: #8792a0; --line: #dfe3e8;
+    --accent: #2c5a8c; --accent-ink: #ffffff; --accent-soft: #e9f0f8;
+    --ok: #1d7a46; --ok-soft: #e3f3ea; --test: #8a5a00; --test-soft: #fbf0d6;
+    --falta: #a23b2f; --falta-soft: #fbe6e2; --mock: #5b4aa0; --mock-soft: #eeebf8;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* WhatsApp: o telemóvel mantém as cores da app nos dois temas */
+    --wa-bar: #008069; --wa-wall: #efeae2; --wa-in: #ffffff; --wa-out: #d9fdd3; --wa-text: #111b21; --wa-meta: #667781; --wa-link: #027eb5; --wa-tick: #53bdeb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #12171c; --soft: #1a2027; --ink: #e6e9ed; --muted: #a3acb6; --faint: #7d8793; --line: #2a313a;
+      --accent: #8fb3db; --accent-ink: #10161d; --accent-soft: #1f2a37;
+      --ok: #6fcf97; --ok-soft: #15291f; --test: #e8c05a; --test-soft: #2d2512;
+      --falta: #f08a7d; --falta-soft: #32201d; --mock: #b3a6ee; --mock-soft: #231f36;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #12171c; --soft: #1a2027; --ink: #e6e9ed; --muted: #a3acb6; --faint: #7d8793; --line: #2a313a;
+    --accent: #8fb3db; --accent-ink: #10161d; --accent-soft: #1f2a37;
+    --ok: #6fcf97; --ok-soft: #15291f; --test: #e8c05a; --test-soft: #2d2512;
+    --falta: #f08a7d; --falta-soft: #32201d; --mock: #b3a6ee; --mock-soft: #231f36;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.55; }
+  .wrap { max-width: 1080px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 32px); }
+  h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+  h1 { font-size: clamp(1.4rem, 3vw, 1.9rem); } h2 { font-size: 1.2rem; } h3 { font-size: 1rem; }
+  p { margin: 0; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .muted { color: var(--muted); } .small { font-size: 0.85rem; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  header { border-bottom: 1px solid var(--line); }
+  header .wrap { padding-block: 18px 14px; display: grid; gap: 10px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 0.85rem; color: var(--muted); }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .chip.feito { background: var(--ok-soft); color: var(--ok); }
+  .chip.teste { background: var(--test-soft); color: var(--test); }
+  .chip.falta { background: var(--falta-soft); color: var(--falta); }
+  .chip.mock { background: var(--mock-soft); color: var(--mock); border: 1px dashed currentColor; }
+  .chip.mock::before { background: transparent; border: 1.5px solid currentColor; }
+
+  nav.tabs { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav.tabs .wrap { display: flex; gap: 2px; overflow-x: auto; }
+  nav.tabs button { font: inherit; font-weight: 600; font-size: 0.95rem; color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent; padding: 13px 14px 10px; cursor: pointer; white-space: nowrap; }
+  nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  nav.tabs button:hover { color: var(--ink); }
+  main { padding-block: 24px 64px; }
+  section[hidden] { display: none; }
+  .lead { color: var(--muted); max-width: 46em; margin-top: 6px; }
+
+  /* 1. WhatsApp */
+  .chat-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 350px); gap: clamp(20px, 4vw, 48px); margin-top: 22px; align-items: start; }
+  .scenes { display: grid; gap: 10px; }
+  .scene { text-align: left; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 13px 16px; cursor: pointer; display: grid; gap: 6px; }
+  .scene[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .scene .top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .scene b { font-weight: 600; }
+  .scene p { color: var(--muted); font-size: 0.9rem; }
+  .note-box { margin-top: 14px; border-left: 3px solid var(--accent); background: var(--soft); border-radius: 0 10px 10px 0; padding: 12px 14px; font-size: 0.92rem; display: grid; gap: 8px; }
+  .note-box b { font-weight: 600; }
+  .phone { width: 100%; max-width: 350px; margin-inline: auto; border: 1px solid var(--line); border-radius: 30px; overflow: hidden; background: var(--wa-wall); box-shadow: 0 14px 34px -22px rgba(0,0,0,.5); font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wa-bar { background: var(--wa-bar); color: #fff; display: flex; align-items: center; gap: 10px; padding: 11px 14px; }
+  .logo { width: 38px; height: 38px; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; }
+  .logo svg { width: 24px; height: 24px; }
+  .wa-name { font-weight: 600; font-size: 0.98rem; line-height: 1.2; display: flex; align-items: center; gap: 5px; }
+  .verified { width: 15px; height: 15px; flex: none; }
+  .wa-sub { font-size: 0.72rem; opacity: .85; }
+  .thread { padding: 12px 10px 16px; display: grid; gap: 5px; align-content: start; min-height: 440px; }
+  .thread .day { justify-self: center; font-size: 0.72rem; color: var(--wa-meta); background: var(--wa-in); padding: 4px 10px; border-radius: 8px; margin-bottom: 4px; box-shadow: 0 1px .5px rgba(11,20,26,.13); }
+  .sys { justify-self: center; text-align: center; font-size: 0.7rem; color: var(--wa-meta); background: #fff6d6; border-radius: 8px; padding: 5px 10px; max-width: 92%; box-shadow: 0 1px .5px rgba(11,20,26,.13); }
+  .msg { max-width: 86%; display: grid; gap: 4px; }
+  .msg.in { justify-self: start; } .msg.out { justify-self: end; }
+  .bub { padding: 7px 9px 5px 10px; border-radius: 10px; color: var(--wa-text); font-size: 0.9rem; line-height: 1.38; box-shadow: 0 1px .5px rgba(11,20,26,.13); white-space: pre-wrap; position: relative; }
+  .msg.in .bub { background: var(--wa-in); border-top-left-radius: 3px; }
+  .msg.out .bub { background: var(--wa-out); border-top-right-radius: 3px; }
+  .meta { float: right; margin: 7px 0 -3px 10px; font-size: 0.68rem; color: var(--wa-meta); display: inline-flex; gap: 3px; align-items: center; }
+  .meta svg { width: 16px; height: 11px; color: var(--wa-tick); }
+  .tpl { font-size: 0.66rem; color: var(--wa-meta); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; display: block; }
+  .qr { display: grid; gap: 4px; }
+  .qr span { background: var(--wa-in); color: var(--wa-link); font-weight: 500; font-size: 0.88rem; text-align: center; padding: 8px; border-radius: 9px; box-shadow: 0 1px .5px rgba(11,20,26,.13); }
+  .qr span.pressed { background: var(--wa-out); }
+  .qr span.mockbtn { border: 1.5px dashed var(--mock); color: var(--mock); background: rgba(255,255,255,.7); }
+  .msg.previsto .bub { background: rgba(255,255,255,.55); border: 1.5px dashed var(--mock); box-shadow: none; }
+  .msg.out.previsto .bub { background: rgba(217,253,211,.55); }
+  .tag { display: block; font-size: 0.6rem; font-weight: 700; letter-spacing: .07em; color: var(--mock); margin-bottom: 3px; }
+  .replay { margin: 14px auto 0; display: block; font: inherit; font-weight: 600; font-size: 0.9rem; color: var(--accent); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px; cursor: pointer; }
+  .replay:hover { border-color: var(--accent); }
+  @media (prefers-reduced-motion: no-preference) {
+    .msg.pop, .sys.pop { animation: pop .35s ease-out both; }
+    @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  }
+
+  /* 2. Painel */
+  .callout { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); font-size: 0.92rem; }
+  .app { margin-top: 16px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .app-top { background: var(--soft); border-bottom: 1px solid var(--line); padding: 12px 16px 0; }
+  .app-top .brand { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .app-tabs { display: flex; gap: 2px; overflow-x: auto; margin-top: 6px; }
+  .app-tabs span { padding: 8px 12px; font-size: 0.88rem; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+  .app-tabs span.on { color: var(--ink); border-bottom-color: var(--accent); }
+  .app-tabs span.mockt { color: var(--mock); border: 1px dashed var(--mock); border-radius: 8px; margin: 3px 3px 5px; padding: 4px 10px; }
+  .badge { background: var(--test); color: #fff; font-size: 0.72rem; border-radius: 99px; padding: 0 7px; }
+  .testbar { background: var(--test-soft); color: var(--test); font-size: 0.85rem; padding: 7px 16px; border-bottom: 1px solid var(--line); }
+  .app-body { padding: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--bg); display: grid; gap: 10px; }
+  .card.mock { border: 1.5px dashed var(--mock); background: var(--mock-soft); }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card-head h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .route { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.72rem; color: var(--faint); }
+  .row { display: grid; grid-template-columns: 3.1rem minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--line); }
+  .row:first-of-type { border-top: 0; }
+  .row time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.88rem; }
+  .row .nm { font-weight: 600; } .row .sv { color: var(--muted); font-weight: 400; font-size: 0.88rem; }
+  .st { font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+  .st.ok { color: var(--ok); } .st.wait { color: var(--test); } .st.bad { color: var(--falta); } .st.rec { color: var(--accent); }
+  .row.cancel .nm { text-decoration: line-through; color: var(--faint); }
+  .pend { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 6px; }
+  .pend:first-of-type { border-top: 0; padding-top: 0; }
+  .pend .k { font-size: 0.72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  .pend .t { font-size: 0.88rem; background: var(--soft); border-radius: 8px; padding: 8px 10px; }
+  .pend .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pend button { font: inherit; font-weight: 650; font-size: 0.88rem; border: 0; border-radius: 9px; padding: 9px; cursor: pointer; }
+  .b-send { background: var(--ok); color: #fff; } .b-cancel { background: var(--falta-soft); color: var(--falta); }
+  .pend .done { font-size: 0.85rem; font-weight: 600; }
+  .wl { display: grid; }
+
+  /* 3. Relatório */
+  .report { position: relative; margin-top: 16px; border: 1px solid var(--line); border-radius: 16px; padding: clamp(16px, 3vw, 28px); overflow: hidden; }
+  .stamp { position: absolute; top: 16px; right: -44px; transform: rotate(35deg); background: var(--mock); color: #fff; font-weight: 700; font-size: 0.74rem; letter-spacing: .12em; padding: 5px 52px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+  .kpi { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 2px; background: var(--bg); }
+  .kpi b { font-size: 1.9rem; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size: 0.85rem; color: var(--muted); } .kpi small { font-size: 0.74rem; color: var(--faint); }
+  .rep-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }
+  .rep-grid h3 { margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 650; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  tfoot td { font-weight: 700; border-bottom: 0; }
+  .scroll { overflow-x: auto; }
+  svg.chart text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+  svg.chart .grid { stroke: var(--line); stroke-width: 1; }
+
+  /* 4. Estado */
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+  .filters button { font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--muted); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .filters button[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .status-wrap { margin-top: 14px; border: 1px solid var(--line); border-radius: 14px; overflow-x: auto; }
+  .status-wrap table td:first-child { font-weight: 600; min-width: 11rem; }
+  .status-wrap tr[hidden] { display: none; }
+  .status-wrap td { font-size: 0.9rem; } .status-wrap td.dep { color: var(--muted); }
+  .you { font-size: 0.74rem; font-weight: 700; color: var(--falta); text-transform: uppercase; letter-spacing: .04em; }
+
+  footer { border-top: 1px solid var(--line); }
+  footer .wrap { padding-block: 18px 40px; font-size: 0.85rem; color: var(--muted); }
+  @media (max-width: 860px) {
+    .chat-grid, .rep-grid, .app-body { grid-template-columns: minmax(0, 1fr); }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div>
+      <h1>ConsultaOK no WhatsApp — como vai funcionar, e o que falta</h1>
+      <p class="muted small">Protótipo para sócios e dentistas · nomes, horas e valores <b>inventados</b> · não envia mensagens nem chama nenhum serviço pago · atualizado a 29/10/2026</p>
+    </div>
+    <div class="legend" aria-label="Legenda">
+      <span><span class="chip feito">Feito</span> existe no código e nos testes</span>
+      <span><span class="chip teste">Em teste</span> existe, falta validar com o serviço real</span>
+      <span><span class="chip falta">Falta</span> ainda não existe</span>
+      <span><span class="chip mock">Maqueta</span> só desenho, para mostrar a ideia</span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Secções do protótipo">
+  <div class="wrap" role="tablist">
+    <button role="tab" id="t1" aria-controls="p1" aria-selected="true">1 · Conversa no WhatsApp</button>
+    <button role="tab" id="t2" aria-controls="p2" aria-selected="false">2 · Painel da receção</button>
+    <button role="tab" id="t3" aria-controls="p3" aria-selected="false">3 · Relatório mensal</button>
+    <button role="tab" id="t4" aria-controls="p4" aria-selected="false">4 · Estado do projeto</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="p1" role="tabpanel" aria-labelledby="t1">
+    <h2>O que o paciente vê no WhatsApp</h2>
+    <p class="lead">Escolha uma situação. O que está a <b>tracejado</b> é maqueta: ainda não existe no sistema. O selo verde da conta só aparece depois de a Meta verificar a empresa.</p>
+    <div class="chat-grid">
+      <div>
+        <div class="scenes" id="scenes"></div>
+        <div class="note-box" id="sceneNote"></div>
+      </div>
+      <div>
+        <div class="phone" aria-live="polite">
+          <div class="wa-bar">
+            <span class="logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#008069" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5c-2 0-3.5 1.7-3.5 4 0 3.2 1.4 5.2 2 8.5.4 2.3.9 4.5 2 4.5 1.4 0 1.2-4.8 3-6 .5-.3 1.1-.3 1.6 0 1.8 1.2 1.6 6 3 6 1.1 0 1.6-2.2 2-4.5.6-3.3 2-5.3 2-8.5 0-2.3-1.5-4-3.5-4-2 0-2.7 1.2-5 1.2S9 3.5 7 3.5Z"/></svg>
+            </span>
+            <div>
+              <div class="wa-name">Clínica Exemplo
+                <svg class="verified" viewBox="0 0 24 24" aria-label="Conta empresarial verificada (exemplo)"><circle cx="12" cy="12" r="11" fill="#25d366"/><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="wa-sub">Conta empresarial · exemplo</div>
+            </div>
+          </div>
+          <div class="thread" id="thread"></div>
+        </div>
+        <button class="replay" id="replay" type="button">▶ Ver passo a passo</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+    <h2>O que a receção vê</h2>
+    <p class="lead">Desenho da página interna. Cada bloco diz se <b>já existe</b> no painel real (e em que endereço) ou se é <b>maqueta</b>.</p>
+    <div class="callout">
+      <span><span class="chip feito">Painel real</span> contorno cheio: já existe em <code>/admin</code></span>
+      <span><span class="chip mock">Maqueta</span> tracejado: ainda não existe</span>
+      <span class="muted small">Os botões "Enviar" e "Cancelar" funcionam aqui só para demonstrar; nada é enviado.</span>
+    </div>
+    <div class="app">
+      <div class="app-top">
+        <div class="brand"><b>Clínica Exemplo</b><span class="muted small">Sair</span></div>
+        <div class="app-tabs">
+          <span class="on">Presenças</span>
+          <span>Pendentes <span class="badge" id="pcount">3</span></span>
+          <span>Lista de espera (3)</span>
+          <span>Envios</span>
+          <span>Números</span>
+          <span class="mockt">Relatório mensal · maqueta</span>
+          <span class="mockt">Chamadas perdidas · maqueta</span>
+        </div>
+      </div>
+      <div class="testbar" role="status"><b>Modo teste ligado:</b> nenhuma mensagem sai para os pacientes sem ser aprovada.</div>
+      <div class="app-body">
+        <div class="card">
+          <div class="card-head"><h3>Agenda de hoje</h3><span><span class="chip feito">Painel real</span> <span class="route">/admin</span></span></div>
+          <div>
+            <div class="row"><time>09:00</time><span class="nm">Marta S. <span class="sv">· Rotina</span></span><span class="st ok">Confirmada</span></div>
+            <div class="row"><time>09:30</time><span class="nm">João P. <span class="sv">· Destartarização</span></span><span class="st ok">Confirmada</span></div>
+            <div class="row"><time>10:00</time><span class="nm">Rui C. <span class="sv">· Rotina</span></span><span class="st wait">Por confirmar</span></div>
+            <div class="row"><time>11:30</time><span class="nm">Inês F. <span class="sv">· Primeira consulta</span></span><span class="st ok">Confirmada</span></div>
+            <div class="row cancel"><time>15:00</time><span class="nm">Joana R. <span class="sv">· Rotina</span></span><span class="st bad">Cancelada pelo paciente</span></div>
+            <div class="row"><time>15:00</time><span class="nm">Hugo P. <span class="sv">· Rotina</span></span><span class="st rec">Vaga recuperada</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Mensagens pendentes</h3><span><span class="chip feito">Painel real</span> <span class="route">/admin/pendentes</span></span></div>
+          <div id="pendList">
+            <div class="pend"><span class="k">Lembrete · WhatsApp · Rui C.</span><div class="t">Clínica Exemplo: tem consulta amanhã às 10:00. [Confirmo] [Preciso de remarcar]</div><div class="btns"><button class="b-send" type="button">Enviar</button><button class="b-cancel" type="button">Cancelar</button></div></div>
+            <div class="pend"><span class="k">Oferta de vaga · WhatsApp · Beatriz L.</span><div class="t">Clínica Exemplo: vagou uma consulta amanhã às 09:30. Quer ficar com ela? [Quero] [Não, obrigado]</div><div class="btns"><button class="b-send" type="button">Enviar</button><button class="b-cancel" type="button">Cancelar</button></div></div>
+            <div class="pend"><span class="k">Confirmação · SMS (reserva) · Carla L.</span><div class="t">Clínica Exemplo: consulta marcada para quinta-feira, 29 de outubro às 16:00 (Restauração).</div><div class="btns"><button class="b-send" type="button">Enviar</button><button class="b-cancel" type="button">Cancelar</button></div></div>
+          </div>
+          <p class="muted small" id="pendEmpty" hidden>Nada à espera. As próximas mensagens aparecem aqui antes de saírem.</p>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Lista de espera</h3><span><span class="chip feito">Painel real</span> <span class="route">/admin/lista-espera</span></span></div>
+          <div class="wl">
+            <div class="row"><span></span><span class="nm">Beatriz L. <span class="sv">· Rotina · manhãs</span></span><span class="st wait">Oferta enviada</span></div>
+            <div class="row"><span></span><span class="nm">Hugo P. <span class="sv">· Rotina</span></span><span class="st rec">Ficou com a vaga das 15:00</span></div>
+            <div class="row"><span></span><span class="nm">Rita G. <span class="sv">· Primeira consulta</span></span><span class="st">À espera</span></div>
+          </div>
+          <p class="muted small">A receção inscreve pessoas à mão, ou o assistente inscreve quem pede uma hora sem vaga.</p>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Envios</h3><span><span class="chip feito">Painel real</span> <span class="route">/admin/envios</span></span></div>
+          <div class="wl">
+            <div class="row"><time>08:00</time><span class="nm">Marta S. <span class="sv">· lembrete · WhatsApp</span></span><span class="st ok">Lida</span></div>
+            <div class="row"><time>08:00</time><span class="nm">João P. <span class="sv">· lembrete · WhatsApp</span></span><span class="st ok">Entregue</span></div>
+            <div class="row"><time>08:00</time><span class="nm">Rui C. <span class="sv">· sem WhatsApp → SMS</span></span><span class="st ok">Entregue</span></div>
+            <div class="row"><time>09:44</time><span class="nm">Rita G. <span class="sv">· vaga já ocupada</span></span><span class="st bad">Não entregue</span></div>
+          </div>
+        </div>
+        <div class="card mock">
+          <div class="card-head"><h3>Chamadas perdidas hoje</h3><span class="chip mock">Maqueta</span></div>
+          <div class="wl">
+            <div class="row"><time>13:02</time><span class="nm">912 ··· 345 <span class="sv">· ao almoço</span></span><span class="st wait">Mensagem enviada</span></div>
+            <div class="row"><time>13:15</time><span class="nm">965 ··· 810 <span class="sv">· ao almoço</span></span><span class="st rec">Respondeu · marcou</span></div>
+          </div>
+          <p class="small muted">Previsto. Hoje, uma chamada que ninguém atende e não é reencaminhada para o assistente não deixa registo.</p>
+        </div>
+        <div class="card mock">
+          <div class="card-head"><h3>Relatório mensal</h3><span class="chip mock">Maqueta</span></div>
+          <p class="small">Resumo do mês em euros, pronto a mostrar ao dono da clínica. Veja o separador 3.</p>
+          <p class="small muted">Hoje existe a página "Números" (hoje, 7 dias, 30 dias, desde o início) e o email das 20:00.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+    <h2>Relatório mensal para a clínica</h2>
+    <p class="lead">Maqueta de como o mês seria apresentado ao dono. <b>Exemplo, dados fictícios</b>: o sistema ainda não tem resultados de nenhuma clínica.</p>
+    <div class="report">
+      <div class="stamp" aria-hidden="true">EXEMPLO</div>
+      <div class="muted small">Clínica Exemplo · outubro de 2026 · <b>exemplo, dados fictícios</b></div>
+      <div class="kpis">
+        <div class="kpi"><b>22</b><span>faltas</span><small>de 320 consultas (6,9%) · exemplo</small></div>
+        <div class="kpi"><b>14</b><span>vagas reocupadas</span><small>pela lista de espera · exemplo</small></div>
+        <div class="kpi"><b>9</b><span>consultas recuperadas</span><small>remarcadas em vez de perdidas · exemplo</small></div>
+        <div class="kpi"><b>590 €</b><span>valor estimado</span><small>vagas × valor do serviço · exemplo, estimativa</small></div>
+      </div>
+      <div class="rep-grid">
+        <div>
+          <h3>Por semana <span class="muted small">(exemplo)</span></h3>
+          <svg class="chart" viewBox="0 0 440 220" role="img" aria-label="Gráfico de exemplo: faltas e vagas reocupadas por semana">
+            <line class="grid" x1="36" y1="20" x2="430" y2="20"/><line class="grid" x1="36" y1="60" x2="430" y2="60"/>
+            <line class="grid" x1="36" y1="100" x2="430" y2="100"/><line class="grid" x1="36" y1="140" x2="430" y2="140"/>
+            <line class="grid" x1="36" y1="180" x2="430" y2="180"/>
+            <text x="28" y="24" text-anchor="end">8</text><text x="28" y="64" text-anchor="end">6</text>
+            <text x="28" y="104" text-anchor="end">4</text><text x="28" y="144" text-anchor="end">2</text><text x="28" y="184" text-anchor="end">0</text>
+            <g id="bars"></g>
+            <rect x="46" y="204" width="10" height="10" fill="var(--falta)"/><text x="62" y="213">Faltas</text>
+            <rect x="120" y="204" width="10" height="10" fill="var(--accent)"/><text x="136" y="213">Vagas reocupadas</text>
+          </svg>
+        </div>
+        <div>
+          <h3>Vagas reocupadas por serviço <span class="muted small">(exemplo)</span></h3>
+          <div class="scroll"><table>
+            <thead><tr><th>Serviço</th><th class="n">Vagas</th><th class="n">Valor</th><th class="n">Total</th></tr></thead>
+            <tbody>
+              <tr><td>Consulta de rotina</td><td class="n">6</td><td class="n">35 €</td><td class="n">210 €</td></tr>
+              <tr><td>Destartarização</td><td class="n">4</td><td class="n">50 €</td><td class="n">200 €</td></tr>
+              <tr><td>Primeira consulta</td><td class="n">3</td><td class="n">40 €</td><td class="n">120 €</td></tr>
+              <tr><td>Restauração</td><td class="n">1</td><td class="n">60 €</td><td class="n">60 €</td></tr>
+            </tbody>
+            <tfoot><tr><td>Total</td><td class="n">14</td><td></td><td class="n">590 €</td></tr></tfoot>
+          </table></div>
+          <p class="small muted" style="margin-top:10px">Os valores por serviço são os que a clínica indicar. Enquanto não os der, o relatório mostra só a contagem de vagas.</p>
+        </div>
+      </div>
+      <div class="note-box">
+        <div><b>O que já existe e o que falta:</b></div>
+        <div><span class="chip feito">Feito</span> página "Números" (hoje, 7 dias, 30 dias, desde o início), vagas reocupadas e valor, faltas de quem confirmou e de quem não respondeu.</div>
+        <div><span class="chip falta">Falta</span> o período "mês", o relatório pronto a enviar, e mostrar as remarcações (o dado já é registado).</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="p4" role="tabpanel" aria-labelledby="t4" hidden>
+    <h2>Estado do projeto</h2>
+    <p class="lead">Tirado do código real e dos testes. <b>Feito</b> = funciona no código e passa nos testes automáticos (397 na última execução). <b>Em teste</b> = funciona, mas ainda não foi validado com o serviço real. <b>Falta</b> = ainda não existe, ou depende de uma conta ou aprovação externa. A etiqueta <span class="you">depende de ti</span> marca o que só o responsável do projeto pode tratar.</p>
+    <div class="filters" role="group" aria-label="Filtrar por estado">
+      <button type="button" data-f="todos" aria-pressed="true">Todos <span id="c-todos"></span></button>
+      <button type="button" data-f="feito" aria-pressed="false">Feito <span id="c-feito"></span></button>
+      <button type="button" data-f="teste" aria-pressed="false">Em teste <span id="c-teste"></span></button>
+      <button type="button" data-f="falta" aria-pressed="false">Falta <span id="c-falta"></span></button>
+    </div>
+    <div class="status-wrap">
+      <table>
+        <thead><tr><th>Área</th><th>Estado</th><th>O que existe</th><th>O que falta</th></tr></thead>
+        <tbody id="statusBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer><div class="wrap">ConsultaOK · protótipo visual do canal WhatsApp · dados inventados · nenhuma chave, conta ou serviço pago é usado por esta página.</div></footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* --- separadores ------------------------------------------------------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(id) {
+    tabs.forEach(function (t) {
+      var on = t.id === id;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    try { history.replaceState(null, "", "#" + id); } catch (e) {}
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener("click", function () { show(t.id); });
+    t.addEventListener("keydown", function (e) {
+      var j = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : -1;
+      if (j >= 0 && j < tabs.length) { tabs[j].focus(); show(tabs[j].id); }
+    });
+  });
+  var start = (location.hash || "").slice(1);
+  if (tabs.some(function (t) { return t.id === start; })) show(start);
+
+  /* --- 1. conversas ------------------------------------------------------ */
+  // d: in/out · t: texto · h: hora · q: botões de resposta rápida · tpl: mensagem de modelo (template)
+  // p: maqueta (previsto) · pressed: botão carregado · sys: nota do sistema
+  var TICKS = '<svg viewBox="0 0 16 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m1 6 3 3 6-7M6 8l1 1 6-7"/></svg>';
+  var REM = "Clínica Exemplo: tem consulta amanhã às 10:00.\nPode confirmar ou pedir para remarcar aqui em baixo.";
+  var scenes = [
+    {
+      title: "Lembrete 24 h antes", chip: ["teste", "Em teste"],
+      desc: "Modelo com dois botões; o paciente carrega em \"Confirmo\".",
+      note: "<div><b>No sistema real:</b> o lembrete vai como <b>modelo aprovado</b>, com as variáveis clínica, dia e hora, e botões de resposta rápida. Os botões \"Confirmo\" e \"Preciso de remarcar\" são lidos corretamente. O código está pronto e testado com a Twilio simulada.</div><div><span class=\"chip falta\">Falta</span> o modelo ainda não foi criado nem submetido à Meta; nenhuma mensagem real foi enviada.</div>",
+      msgs: [
+        { d: "in", tpl: true, t: REM, h: "10:00", q: ["Confirmo", "Preciso de remarcar"] },
+        { d: "out", t: "Confirmo", h: "10:04" },
+        { d: "in", t: "Obrigado! A sua consulta de amanhã às 10:00 está confirmada.", h: "10:04" }
+      ],
+      pressed: { 0: 0 }
+    },
+    {
+      title: "\"Preciso de remarcar\" → duas horas livres", chip: ["teste", "Em teste"],
+      desc: "O assistente pergunta o dia, propõe duas horas e confirma.",
+      note: "<div><b>No sistema real:</b> carregar no botão passa a conversa ao assistente, que só propõe horas que <b>existem no calendário</b>. Dentro da janela de 24 h do WhatsApp, as respostas são texto livre. Testado com um modelo simulado; <b>ainda não com o modelo real</b> da Anthropic.</div><div><b>Sem a chave da Anthropic (ou se o assistente falhar):</b> nada disto acontece. O paciente recebe «Recebido. Alguém da clínica vai entrar em contacto consigo para remarcar.», fica um pedido de contacto no painel e a receção remarca à mão. O mesmo vale por SMS, onde o padrão é este pedido de contacto.</div>",
+      msgs: [
+        { d: "in", tpl: true, t: REM, h: "10:00", q: ["Confirmo", "Preciso de remarcar"] },
+        { d: "out", t: "Preciso de remarcar", h: "10:20" },
+        { d: "in", t: "Aqui Clínica Exemplo — fala a Rita, assistente virtual.\n\nClaro. Que dia e período lhe dão mais jeito?", h: "10:20" },
+        { d: "out", t: "pode ser quinta de tarde?", h: "10:21" },
+        { d: "in", t: "Na quinta à tarde tenho às 14:30 ou às 16:00. Qual prefere?", h: "10:21" },
+        { d: "out", t: "16:00", h: "10:22" },
+        { d: "in", t: "Fica remarcada para quinta-feira, 29 de outubro, às 16:00. Enviamos-lhe um novo lembrete na véspera.", h: "10:22" }
+      ],
+      pressed: { 0: 1 }
+    },
+    {
+      title: "Aviso de assistente automático", chip: ["feito", "Feito · botão previsto"],
+      desc: "Na primeira mensagem, e a opção de falar com uma pessoa.",
+      note: "<div><b>No sistema real:</b> a primeira resposta de cada conversa começa <b>sempre</b> por \"assistente virtual\"; não depende do modelo. Quem escrever \"prefiro falar com uma pessoa\" fica com um pedido de contacto para a receção.</div><div><span class=\"chip mock\">Maqueta</span> o <b>botão</b> \"Falar com uma pessoa\" não existe; hoje faz-se por texto.</div>",
+      msgs: [
+        { d: "out", t: "Bom dia, queria marcar uma consulta", h: "09:12" },
+        { d: "in", t: "Bom dia. Aqui Clínica Exemplo — fala a Rita, assistente virtual.\n\nPosso marcar-lhe uma consulta. Como se chama?", h: "09:12", q: ["Falar com uma pessoa"], mockq: true },
+        { d: "out", t: "prefiro falar com uma pessoa", h: "09:13" },
+        { d: "in", t: "Sem problema. Fica registado e alguém da clínica entra em contacto consigo assim que possível.", h: "09:13" }
+      ]
+    },
+    {
+      title: "Vaga libertada → lista de espera", chip: ["teste", "Em teste"],
+      desc: "Oferta com \"Quero\" e \"Não, obrigado\"; o paciente aceita.",
+      note: "<div><b>No sistema real:</b> a vaga é oferecida a quem está na lista de espera e a quem <b>cabe</b>; o primeiro a aceitar fica com ela e quem chega tarde é avisado. Os textos \"Quero\" e \"Não, obrigado\" são lidos corretamente. Testado numa simulação de um dia completo.</div><div><span class=\"chip falta\">Falta</span> o modelo \"oferta\" da Meta. Sem ele, a oferta sai por <b>SMS</b>, como reserva.</div>",
+      msgs: [
+        { d: "in", tpl: true, t: "Clínica Exemplo: vagou uma consulta hoje às 15:00.\nQuer ficar com ela? Tem 30 minutos para responder.", h: "09:41", q: ["Quero", "Não, obrigado"] },
+        { d: "out", t: "Quero", h: "09:42" },
+        { d: "in", t: "Ficou marcado: Consulta de rotina, hoje às 15:00. Para alterar, ligue 253 000 000.", h: "09:42" }
+      ],
+      pressed: { 0: 0 }
+    },
+    {
+      title: "Chamada perdida ao almoço", chip: ["mock", "Maqueta · previsto"],
+      desc: "Mensagem automática com horários livres.",
+      note: "<div><b>Ainda não existe.</b> Hoje, se a clínica reencaminha as chamadas para o assistente, ele atende e marca; se falhar, fica um pedido de contacto. A mensagem automática depois de uma chamada perdida está <b>prevista, não construída</b>.</div><div>Por ser uma mensagem iniciada pela clínica, teria de usar um <b>modelo aprovado</b> pela Meta.</div>",
+      msgs: [
+        { d: "in", t: "Clínica Exemplo: vimos que ligou há pouco e não conseguimos atender.\nHoje temos às 14:30 ou às 16:00. Quer uma delas?", h: "13:04", p: true, q: ["14:30", "16:00"], mockq: true },
+        { d: "out", t: "14:30", h: "13:06", p: true },
+        { d: "in", t: "Fica marcado para hoje às 14:30. Até já!", h: "13:06", p: true }
+      ]
+    }
+  ];
+
+  var current = 0, timers = [];
+  var scenesEl = document.getElementById("scenes"), thread = document.getElementById("thread"), noteEl = document.getElementById("sceneNote");
+  function chip(c) { return '<span class="chip ' + c[0] + '">' + c[1] + "</span>"; }
+  function renderScenes() {
+    scenesEl.innerHTML = scenes.map(function (s, i) {
+      return '<button class="scene" type="button" data-i="' + i + '" aria-pressed="' + (i === current) + '"><span class="top"><b>' + s.title + "</b>" + chip(s.chip) + "</span><p>" + s.desc + "</p></button>";
+    }).join("");
+  }
+  function msgEl(m, idx, s, animate) {
+    var wrap = document.createElement("div");
+    wrap.className = "msg " + m.d + (m.p ? " previsto" : "") + (animate ? " pop" : "");
+    var bub = document.createElement("div");
+    bub.className = "bub";
+    if (m.p) { var tag = document.createElement("span"); tag.className = "tag"; tag.textContent = "PREVISTO · MAQUETA"; bub.appendChild(tag); }
+    if (m.tpl) { var tp = document.createElement("span"); tp.className = "tpl"; tp.textContent = "Mensagem de modelo"; bub.appendChild(tp); }
+    var txt = document.createElement("span"); txt.textContent = m.t; bub.appendChild(txt);
+    var meta = document.createElement("span"); meta.className = "meta"; meta.innerHTML = m.h + (m.d === "out" ? " " + TICKS : "");
+    bub.appendChild(meta);
+    wrap.appendChild(bub);
+    if (m.q) {
+      var qr = document.createElement("div"); qr.className = "qr";
+      m.q.forEach(function (label, k) {
+        var b = document.createElement("span");
+        b.textContent = label;
+        if (m.mockq) b.className = "mockbtn";
+        else if (s.pressed && s.pressed[idx] === k) b.className = "pressed";
+        qr.appendChild(b);
+      });
+      wrap.appendChild(qr);
+    }
+    return wrap;
+  }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function renderThread(animate) {
+    clearTimers();
+    var s = scenes[current];
+    thread.innerHTML = '<span class="day">HOJE</span>';
+    noteEl.innerHTML = s.note;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    s.msgs.forEach(function (m, i) {
+      if (!animate || reduce) { thread.appendChild(msgEl(m, i, s, false)); return; }
+      timers.push(setTimeout(function () { thread.appendChild(msgEl(m, i, s, true)); }, 1000 * i));
+    });
+  }
+  scenesEl.addEventListener("click", function (e) {
+    var b = e.target.closest(".scene");
+    if (!b) return;
+    current = Number(b.getAttribute("data-i"));
+    renderScenes();
+    renderThread(false);
+  });
+  document.getElementById("replay").addEventListener("click", function () { renderThread(true); });
+  renderScenes();
+  renderThread(false);
+
+  /* --- 2. mensagens pendentes ------------------------------------------- */
+  var pend = document.getElementById("pendList"), pcount = document.getElementById("pcount"), pempty = document.getElementById("pendEmpty");
+  function left() {
+    var n = pend.querySelectorAll(".pend .btns").length;
+    pcount.textContent = n; pcount.hidden = n === 0; pempty.hidden = n !== 0;
+  }
+  pend.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    var box = b.closest(".pend"), send = b.classList.contains("b-send");
+    box.querySelector(".btns").outerHTML = '<span class="done" style="color:var(' + (send ? "--ok" : "--falta") + ')">' + (send ? "✔ Enviada (demonstração)" : "✘ Cancelada: não vai sair") + "</span>";
+    left();
+  });
+
+  /* --- 3. gráfico de exemplo -------------------------------------------- */
+  // Escala única: 1 unidade = 20 px, base y = 180. Faltas: 7,6,5,4 (=22). Vagas: 2,4,5,3 (=14).
+  var weeks = [["Sem. 1", 7, 2], ["Sem. 2", 6, 4], ["Sem. 3", 5, 5], ["Sem. 4", 4, 3]];
+  var svg = "";
+  weeks.forEach(function (w, i) {
+    var x = 60 + i * 95, h1 = w[1] * 20, h2 = w[2] * 20;
+    svg += '<rect x="' + x + '" y="' + (180 - h1) + '" width="30" height="' + h1 + '" rx="3" fill="var(--falta)"/>' +
+           '<rect x="' + (x + 34) + '" y="' + (180 - h2) + '" width="30" height="' + h2 + '" rx="3" fill="var(--accent)"/>' +
+           '<text x="' + (x + 15) + '" y="' + (176 - h1) + '" text-anchor="middle">' + w[1] + "</text>" +
+           '<text x="' + (x + 49) + '" y="' + (176 - h2) + '" text-anchor="middle">' + w[2] + "</text>" +
+           '<text x="' + (x + 32) + '" y="198" text-anchor="middle">' + w[0] + "</text>";
+  });
+  document.getElementById("bars").innerHTML = svg;
+
+  /* --- 4. estado --------------------------------------------------------- */
+  var YOU = ' <span class="you">depende de ti</span>';
+  // [área, estado, o que existe, o que falta]
+  var rows = [
+    ["Marcação, remarcação e cancelamento", "feito", "O assistente marca, remarca e desmarca só em horas livres do calendário; confirmação, cancelamento e REMARCAR tratados sem falhas; nunca fica paciente sem resposta.", "Validar com o modelo real da Anthropic (ver \"Assistente\")."],
+    ["Lista de espera e vagas reocupadas", "feito", "Oferta em sequência ou em paralelo, aceitar e recusar, aviso de vaga ocupada, registo de quem, quando e valor.", "—"],
+    ["Ensaio com Google Calendar", "teste", "Ligação verificada a 27/10: lê e escreve num calendário de teste e mostra as consultas na página da receção.", "Um dia completo com consultas reais; só depois o calendário da clínica."],
+    ["Canal WhatsApp: código de envio", "teste", "Está pronto no código para envio real: envia por <code>whatsapp:</code>, usa modelos com variáveis e botões, trata a janela de 24 h e passa a SMS se o número não tiver WhatsApp. <b>Só foi testado com a Twilio simulada</b>, nunca enviou uma mensagem real.", "Número remetente WhatsApp (<code>TWILIO_WHATSAPP_FROM</code>) e um primeiro envio real." + YOU],
+    ["Canal WhatsApp: modelos (templates)", "falta", "A estrutura está definida: variáveis (clínica, dia, hora), botões com os identificadores \"confirmar\", \"remarcar\" e \"cancelar\", e modelos opcionais para oferta de vaga e vaga ocupada. A lista de modelos na configuração está <b>vazia</b>.", "Redigir os modelos, criá-los na Twilio e submetê-los à Meta. Os botões \"Quero\" e \"Não, obrigado\" já são lidos como texto."],
+    ["Verificação da empresa na Meta e aprovação dos modelos", "falta", "—", "Verificação do negócio na Meta e aprovação de cada modelo. Segundo a documentação da Twilio, a verificação demora em média 1 a 2 semanas (estimativa; não é garantido)." + YOU],
+    ["SMS como reserva", "teste", "Se o WhatsApp falha por o número não o ter, o lembrete passa a SMS; ofertas e avisos sem modelo saem por SMS. Testado com a Twilio simulada.", "Número +351 e conta Twilio paga, com aprovação dos documentos." + YOU],
+    ["Aviso de assistente automático", "feito", "A primeira resposta de cada conversa diz sempre \"assistente virtual\", garantido no código e testado em todas as entradas.", "Botão \"Falar com uma pessoa\" (hoje faz-se por texto, e fica um pedido de contacto)."],
+    ["Painel da receção, modo teste e registo de envios", "feito", "Presenças, pendentes (nada sai sem aprovação), lista de espera, envios com entregue, lida e erro, e números.", "Relatório mensal e chamadas perdidas (ver abaixo)."],
+    ["Assistente com o modelo real", "teste", "Funciona com um modelo simulado e numa API de teste local.", "Créditos e chave da Anthropic, e um dia completo de conversas reais no ensaio." + YOU],
+    ["Servidor online (24 h)", "falta", "Ficheiro de instalação para o Render, pronto.", "Conta paga no Render; alertas se o servidor cair." + YOU],
+    ["RGPD: aviso e limpeza", "feito", "Aviso de assistente; nomes, telefones e textos apagados ao fim de 90 dias; só números anónimos ficam.", "—"],
+    ["RGPD: apagar um paciente a pedido", "falta", "—", "Função para apagar os dados de uma pessoa; acordo de subcontratação com cada clínica."],
+    ["Chamada perdida com mensagem automática", "falta", "—", "Não foi construído. Hoje: o assistente atende (se houver reencaminhamento) ou fica um pedido de contacto."],
+    ["Contactar pacientes inativos", "falta", "—", "Decidido não construir já: é marketing e precisa de base legal (consentimento)."],
+    ["Voz (chamadas)", "teste", "Atende em português de Portugal, silêncios, desligar a meio, mensagem de falha. Testado com chamadas simuladas.", "Nenhuma chamada real feita; precisa do número Twilio." + YOU],
+    ["Relatório mensal", "falta", "A página \"Números\" tem hoje, 7 dias, 30 dias e desde o início.", "Período \"mês\", relatório pronto a enviar e remarcações à vista."]
+  ];
+  var names = { feito: "Feito", teste: "Em teste", falta: "Falta" };
+  var body = document.getElementById("statusBody");
+  body.innerHTML = rows.map(function (r) {
+    return '<tr data-s="' + r[1] + '"><td>' + r[0] + '</td><td><span class="chip ' + r[1] + '">' + names[r[1]] + "</span></td><td>" + r[2] + '</td><td class="dep">' + r[3] + "</td></tr>";
+  }).join("");
+  ["todos", "feito", "teste", "falta"].forEach(function (k) {
+    document.getElementById("c-" + k).textContent = "(" + rows.filter(function (r) { return k === "todos" || r[1] === k; }).length + ")";
+  });
+  document.querySelector(".filters").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    var f = b.getAttribute("data-f");
+    Array.prototype.forEach.call(this.querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    Array.prototype.forEach.call(body.rows, function (tr) { tr.hidden = !(f === "todos" || tr.getAttribute("data-s") === f); });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ConsultaOK para clínicas dentárias</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff; --soft: #f4f6f9; --ink: #1c2530; --muted: #566271; --line: #dfe3e8;
+    --accent: #2c5a8c; --accent-ink: #ffffff; --accent-soft: #e9f0f8;
+    --ok: #1d7a46; --ok-soft: #e3f3ea; --warn: #8a5a00; --warn-soft: #fbf0d6; --bad: #a23b2f;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --wa-bar: #008069; --wa-wall: #efeae2; --wa-in: #ffffff; --wa-out: #d9fdd3; --wa-text: #111b21; --wa-meta: #667781; --wa-link: #027eb5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #12171c; --soft: #1a2027; --ink: #e6e9ed; --muted: #a3acb6; --line: #2a313a;
+      --accent: #8fb3db; --accent-ink: #10161d; --accent-soft: #1f2a37;
+      --ok: #6fcf97; --ok-soft: #15291f; --warn: #e8c05a; --warn-soft: #2d2512; --bad: #f08a7d;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.6; }
+  .wrap { max-width: 1040px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 32px); }
+  h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; line-height: 1.25; }
+  h1 { font-size: clamp(1.6rem, 4vw, 2.3rem); } h2 { font-size: 1.4rem; } h3 { font-size: 1.05rem; }
+  p { margin: 0; }
+  .muted { color: var(--muted); } .small { font-size: 0.88rem; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  header { padding-block: 36px 24px; border-bottom: 1px solid var(--line); }
+  header p { max-width: 38em; margin-top: 10px; color: var(--muted); }
+  .fict { display: inline-block; margin-top: 14px; font-size: 0.82rem; background: var(--warn-soft); color: var(--warn); padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+
+  nav.tabs { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+  nav.tabs .wrap { display: flex; gap: 2px; overflow-x: auto; }
+  nav.tabs button { font: inherit; font-weight: 600; font-size: 0.95rem; color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent; padding: 14px 14px 11px; cursor: pointer; white-space: nowrap; }
+  nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  main { padding-block: 28px 20px; }
+  section[hidden] { display: none; }
+  .lead { color: var(--muted); max-width: 40em; margin-top: 6px; }
+
+  /* 1. conversa */
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: clamp(20px, 4vw, 48px); margin-top: 22px; align-items: start; }
+  .scenes { display: grid; gap: 10px; }
+  .scene { text-align: left; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; display: grid; gap: 4px; }
+  .scene[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .scene b { font-weight: 600; } .scene span { color: var(--muted); font-size: 0.92rem; }
+  .phone { width: 100%; max-width: 340px; margin-inline: auto; border: 1px solid var(--line); border-radius: 28px; overflow: hidden; background: var(--wa-wall); }
+  .wa-bar { background: var(--wa-bar); color: #fff; padding: 12px 16px; font-weight: 600; font-size: 0.95rem; }
+  .wa-bar small { display: block; font-weight: 400; opacity: 0.85; font-size: 0.78rem; }
+  .msgs { padding: 14px 12px; display: grid; gap: 8px; min-height: 380px; align-content: start; }
+  .m { max-width: 86%; padding: 8px 11px; border-radius: 10px; font-size: 0.92rem; line-height: 1.4; color: var(--wa-text); box-shadow: 0 1px 1px rgba(0,0,0,.08); }
+  .m.in { background: var(--wa-in); justify-self: start; border-top-left-radius: 2px; }
+  .m.out { background: var(--wa-out); justify-self: end; border-top-right-radius: 2px; }
+  .m i { display: block; font-style: normal; color: var(--wa-meta); font-size: 0.7rem; text-align: right; margin-top: 2px; }
+  .qr { justify-self: start; display: grid; gap: 4px; width: 86%; margin-top: -2px; }
+  .qr span { background: var(--wa-in); color: var(--wa-link, #027eb5); text-align: center; font-size: 0.86rem; font-weight: 600; padding: 7px 8px; border-radius: 8px; box-shadow: 0 1px 1px rgba(0,0,0,.08); }
+  .qr span.tap { background: #d6ecf7; }
+  .day { justify-self: center; font-size: 0.72rem; background: rgba(255,255,255,.75); color: var(--wa-meta); padding: 2px 10px; border-radius: 8px; }
+
+  /* 2. painel */
+  .banner { margin-top: 20px; background: var(--ok-soft); color: var(--ok); border-radius: 12px; padding: 14px 18px; font-weight: 600; font-size: 1.08rem; }
+  .panel { margin-top: 16px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .panel-head { background: var(--soft); padding: 12px 16px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-weight: 600; }
+  .panel-head span { font-weight: 400; color: var(--muted); font-size: 0.9rem; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 14px 16px; border-top: 1px solid var(--line); align-items: center; }
+  .row .who { font-size: 0.85rem; color: var(--muted); }
+  .row .txt { margin-top: 3px; }
+  .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { font: inherit; font-size: 0.92rem; font-weight: 600; border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
+  .btn.sec { background: var(--bg); color: var(--ink); border-color: var(--line); }
+  .row.done { opacity: 0.65; }
+  .state { font-weight: 600; font-size: 0.92rem; }
+  .state.ok { color: var(--ok); } .state.no { color: var(--bad); }
+  .empty { padding: 18px 16px; color: var(--muted); border-top: 1px solid var(--line); }
+
+  /* 3. calculadora */
+  .calc { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+  .box { border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 14px; align-content: start; }
+  label { display: grid; gap: 6px; font-weight: 600; font-size: 0.95rem; }
+  input[type=number] { font: inherit; font-size: 1.1rem; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); width: 100%; }
+  .res { background: var(--soft); }
+  .big { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .res .big { color: var(--bad); }
+
+  /* passos e pedido */
+  .steps { padding-block: 36px 8px; border-top: 1px solid var(--line); margin-top: 28px; }
+  ol.s { list-style: none; padding: 0; margin: 18px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; counter-reset: p; }
+  ol.s li { counter-increment: p; border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 6px; }
+  ol.s li::before { content: counter(p); width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; }
+  ol.s p { color: var(--muted); font-size: 0.95rem; }
+  .ask { margin-block: 36px; background: var(--accent-soft); border-radius: 18px; padding: clamp(22px, 4vw, 36px); display: grid; gap: 14px; }
+  .ask h2 { font-size: clamp(1.25rem, 3vw, 1.6rem); }
+  .contact { display: flex; flex-wrap: wrap; gap: 8px 24px; font-weight: 600; }
+  .contact a { color: var(--accent); text-decoration: none; } .contact a:hover { text-decoration: underline; }
+  .soon { padding-block: 4px 40px; color: var(--muted); font-size: 0.92rem; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Lembretes e remarcação por mensagem para clínicas dentárias</h1>
+    <p>O ConsultaOK lembra os pacientes da consulta por WhatsApp ou SMS, deixa-os confirmar ou pedir para remarcar com um toque, e oferece a vaga libertada a quem está em lista de espera. A receção continua a mandar: vê tudo e aprova as mensagens.</p>
+    <span class="fict">Todos os nomes, horas e números nesta página são fictícios · Em fase de teste</span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Ecrãs">
+  <div class="wrap">
+    <button id="t1" aria-selected="true" aria-controls="s1">1. A conversa</button>
+    <button id="t2" aria-selected="false" aria-controls="s2">2. O painel da receção</button>
+    <button id="t3" aria-selected="false" aria-controls="s3">3. Quanto perde por mês</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section id="s1" aria-labelledby="t1">
+    <h2>O que o paciente vê</h2>
+    <p class="lead">Escolha uma situação. As mensagens são curtas, dizem qual é a clínica e têm botões para responder com um toque.</p>
+    <div class="grid">
+      <div class="scenes" id="scenes">
+        <button class="scene" aria-pressed="true" data-s="lembrete"><b>Lembrete e confirmação</b><span>O paciente carrega em «Confirmo» e fica confirmado.</span></button>
+        <button class="scene" aria-pressed="false" data-s="remarcar"><b>Pedido de remarcação</b><span>Com o assistente ligado, o paciente escolhe a nova hora na conversa. Ainda em teste, só com assistente simulado.</span></button>
+        <button class="scene" aria-pressed="false" data-s="remarcar-rececao"><b>Remarcação pela receção</b><span>A alternativa, sempre disponível: o paciente pede e a clínica trata.</span></button>
+        <button class="scene" aria-pressed="false" data-s="vaga"><b>Vaga oferecida à lista de espera</b><span>Alguém desmarca; quem está à espera recebe a vaga e carrega em «Quero».</span></button>
+      </div>
+      <div class="phone" aria-live="polite">
+        <div class="wa-bar">Clínica Exemplo<small>conta da clínica</small></div>
+        <div class="msgs" id="msgs"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s2" aria-labelledby="t2" hidden>
+    <h2>O que a receção controla</h2>
+    <p class="lead">Antes de começar, as mensagens ficam numa lista à espera. A receção lê, e envia ou cancela cada uma.</p>
+    <div class="banner">Nada sai sem a sua aprovação.</div>
+    <div class="panel">
+      <div class="panel-head">Mensagens à espera de aprovação <span id="count"></span></div>
+      <div id="queue"></div>
+    </div>
+    <p class="small muted" style="margin-top:10px">Experimente: carregue em «Enviar» ou «Cancelar». Exemplo com dados fictícios.</p>
+  </section>
+
+  <section id="s3" aria-labelledby="t3" hidden>
+    <h2>Quanto custa uma falta</h2>
+    <p class="lead">Escreva os seus números. A conta é só uma multiplicação; não estimamos nada por si.</p>
+    <div class="calc">
+      <div class="box">
+        <label>Faltas por mês (consultas a que o paciente não veio)
+          <input id="faltas" type="number" min="0" step="1" inputmode="numeric" placeholder="ex.: 20">
+        </label>
+        <label>Valor médio de uma consulta (€)
+          <input id="valor" type="number" min="0" step="1" inputmode="decimal" placeholder="ex.: 60">
+        </label>
+      </div>
+      <div class="box res" aria-live="polite">
+        <span class="muted">A clínica perde por mês</span>
+        <span class="big" id="mes">—</span>
+        <span class="muted" id="ano"></span>
+        <p class="small muted">Faltas × valor médio. Os valores dos exemplos acima são só para mostrar como se preenche, e não são resultados.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="steps">
+    <h2>Como começar em 3 passos</h2>
+    <ol class="s">
+      <li><h3>Partilhe o Google Calendar</h3><p>Dá acesso à agenda da clínica. Não precisa de mudar a forma como marca consultas.</p></li>
+      <li><h3>Aprove as primeiras mensagens</h3><p>No início vê cada mensagem antes de sair. Só quando estiver à vontade é que passa a enviar sozinho.</p></li>
+      <li><h3>Veja os resultados no fim do mês</h3><p>Medimos juntos quantas consultas foram confirmadas e quantas vagas foram reocupadas.</p></li>
+    </ol>
+  </div>
+
+  <div class="ask">
+    <h2>Procuro 2 ou 3 clínicas para um mês de teste grátis, com medição de resultados. 15 minutos para lhe mostrar?</h2>
+    <div class="contact">
+      <span>Guilherme Carvalho</span>
+      <a href="tel:+351916908383">916 908 383</a>
+      <a href="mailto:guicarvalhosilva99@gmail.com">guicarvalhosilva99@gmail.com</a>
+    </div>
+  </div>
+
+  <p class="soon">Em breve: relatório mensal automático por email.</p>
+</main>
+
+<script>
+(function () {
+  var tabs = ["t1", "t2", "t3"];
+  tabs.forEach(function (id, i) {
+    document.getElementById(id).addEventListener("click", function () {
+      tabs.forEach(function (o, j) {
+        document.getElementById(o).setAttribute("aria-selected", String(i === j));
+        document.getElementById("s" + (j + 1)).hidden = i !== j;
+      });
+    });
+  });
+
+  // Abrir direto num ecrã: prototipo-clinica.html#t2
+  var hash = location.hash.replace("#", "").split(":"), start = hash[0];
+  if (tabs.indexOf(start) > 0) { document.getElementById(start).click(); document.getElementById(start).blur(); window.scrollTo(0, 0); }
+
+  var REM = "Clínica Exemplo: tem consulta amanhã às 10:00. Pode confirmar, pedir para remarcar ou cancelar aqui em baixo.";
+  var BTN = ["Confirmo", "Preciso de remarcar"];
+  var SCENES = {
+    lembrete: [
+      ["day", "Ontem"],
+      ["in", REM, "09:00", BTN],
+      ["out", "Confirmo", "09:12"],
+      ["in", "Consulta confirmada: amanhã às 10:00. Obrigado!", "09:12"]
+    ],
+    remarcar: [
+      ["day", "Ontem"],
+      ["in", REM, "09:00", BTN],
+      ["out", "Preciso de remarcar", "09:20"],
+      ["in", "Aqui Clínica Exemplo, fala o assistente virtual. Que dia lhe dá mais jeito?", "09:20"],
+      ["out", "Quinta de tarde", "09:21"],
+      ["in", "Tenho quinta às 14:30 ou às 16:00. Qual prefere?", "09:21"],
+      ["out", "16:00", "09:22"],
+      ["in", "Fica remarcada para quinta às 16:00.", "09:22"]
+    ],
+    "remarcar-rececao": [
+      ["day", "Ontem"],
+      ["in", REM, "09:00", BTN],
+      ["out", "Preciso de remarcar", "09:20"],
+      ["in", "Recebido. A clínica vai entrar em contacto consigo para remarcar.", "09:20"]
+    ],
+    vaga: [
+      ["day", "Hoje"],
+      ["in", "Clínica Exemplo: vagou uma consulta hoje às 15:30, e está na nossa lista de espera. Se a quiser, responda \"Quero\".", "11:05", ["Quero", "Não"]],
+      ["out", "Quero", "11:07"],
+      ["in", "Ficou marcado: consulta de rotina, hoje às 15:30. Para alterar, ligue 2XX XXX XXX.", "11:07"]
+    ]
+  };
+  var msgs = document.getElementById("msgs");
+  function show(key) {
+    msgs.innerHTML = "";
+    SCENES[key].forEach(function (m) {
+      var d = document.createElement("div");
+      if (m[0] === "day") { d.className = "day"; d.textContent = m[1]; }
+      else { d.className = "m " + m[0]; d.textContent = m[1]; var t = document.createElement("i"); t.textContent = m[2]; d.appendChild(t); }
+      msgs.appendChild(d);
+      if (m[3]) { var q = document.createElement("div"); q.className = "qr"; m[3].forEach(function (x) { var b = document.createElement("span"); b.textContent = x; q.appendChild(b); }); msgs.appendChild(q); }
+    });
+  }
+  var buttons = document.querySelectorAll(".scene");
+  buttons.forEach(function (b) {
+    b.addEventListener("click", function () {
+      buttons.forEach(function (o) { o.setAttribute("aria-pressed", String(o === b)); });
+      show(b.dataset.s);
+    });
+  });
+  show("lembrete");
+  // prototipo-clinica.html#t1:vaga abre a situação pedida
+  if (hash[1]) { var sb = document.querySelector('.scene[data-s="' + hash[1] + '"]'); if (sb) { sb.click(); window.scrollTo(0, 0); } }
+
+  var QUEUE = [
+    ["Paciente: Maria Exemplo · 912 000 001", "Clínica Exemplo: tem consulta amanhã às 10:00. Pode confirmar, pedir para remarcar ou cancelar aqui em baixo. [Confirmo] [Preciso de remarcar]"],
+    ["Paciente: João Exemplo · 912 000 002", "Clínica Exemplo: vagou uma consulta hoje às 15:30, e está na nossa lista de espera. Se a quiser, responda \"Quero\". [Quero] [Não]"],
+    ["Paciente: Ana Exemplo · 912 000 003", "Clínica Exemplo: tem consulta hoje às 17:00. Pode confirmar ou cancelar aqui em baixo. [Confirmo] [Cancelar consulta]"]
+  ];
+  var state = QUEUE.map(function () { return null; });
+  var queue = document.getElementById("queue"), count = document.getElementById("count");
+  function draw() {
+    queue.innerHTML = "";
+    var pending = 0;
+    QUEUE.forEach(function (q, i) {
+      var r = document.createElement("div");
+      r.className = "row" + (state[i] ? " done" : "");
+      var left = document.createElement("div");
+      var who = document.createElement("div"); who.className = "who"; who.textContent = q[0];
+      var txt = document.createElement("div"); txt.className = "txt"; txt.textContent = q[1];
+      left.appendChild(who); left.appendChild(txt);
+      var right = document.createElement("div");
+      if (state[i]) {
+        right.className = "state " + (state[i] === "env" ? "ok" : "no");
+        right.textContent = state[i] === "env" ? "Enviada" : "Cancelada";
+      } else {
+        pending++;
+        right.className = "acts";
+        var a = document.createElement("button"); a.className = "btn"; a.textContent = "Enviar";
+        var c = document.createElement("button"); c.className = "btn sec"; c.textContent = "Cancelar";
+        a.onclick = function () { state[i] = "env"; draw(); };
+        c.onclick = function () { state[i] = "can"; draw(); };
+        right.appendChild(a); right.appendChild(c);
+      }
+      r.appendChild(left); r.appendChild(right);
+      queue.appendChild(r);
+    });
+    count.textContent = pending + (pending === 1 ? " por decidir" : " por decidir");
+    if (!pending) {
+      var e = document.createElement("div"); e.className = "empty";
+      e.textContent = "Tudo decidido. Recarregue a página para repetir o exemplo.";
+      queue.appendChild(e);
+    }
+  }
+  draw();
+
+  var f = document.getElementById("faltas"), v = document.getElementById("valor");
+  var mes = document.getElementById("mes"), ano = document.getElementById("ano");
+  var eur = new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  function calc() {
+    var a = parseFloat(f.value), b = parseFloat(v.value);
+    if (!(a >= 0) || !(b >= 0) || f.value === "" || v.value === "") { mes.textContent = "—"; ano.textContent = ""; return; }
+    mes.textContent = eur.format(a * b);
+    ano.textContent = "Em 12 meses, com o mesmo ritmo: " + eur.format(a * b * 12);
+  }
+  f.addEventListener("input", calc); v.addEventListener("input", calc);
+})();
+</script>
+</body>
+</html>
